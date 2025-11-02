@@ -1,32 +1,45 @@
 import os
 import time
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright
 
-# 日志缓冲区
+# -------------------------------
 log_buffer = []
 
 def log(msg):
     print(msg)
     log_buffer.append(msg)
+# -------------------------------
 
+# Telegram 推送函数
 def send_tg_log():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
-        return  # 未配置则跳过
+        print("⚠️ Telegram 未配置，跳过推送")
+        return
 
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    final_msg = f"📌 Netlib 保活执行日志\n🕒 {now}\n\n" + "\n".join(log_buffer)
+    utc_now = datetime.utcnow()
+    beijing_now = utc_now + timedelta(hours=8)
+    now_str = beijing_now.strftime("%Y-%m-%d %H:%M:%S") + " UTC+8"
 
-    # 防止超出 Telegram 单条消息长度限制
+    final_msg = f"📌 Netlib 保活执行日志\n🕒 {now_str}\n\n" + "\n".join(log_buffer)
+
     for i in range(0, len(final_msg), 3900):
         chunk = final_msg[i:i+3900]
-        requests.get(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            params={"chat_id": chat_id, "text": chunk}
-        )
+        try:
+            resp = requests.get(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                params={"chat_id": chat_id, "text": chunk},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                print(f"✅ Telegram 推送成功 [{i//3900 + 1}]")
+            else:
+                print(f"⚠️ Telegram 推送失败 [{i//3900 + 1}]: HTTP {resp.status_code}, 响应: {resp.text}")
+        except Exception as e:
+            print(f"⚠️ Telegram 推送异常 [{i//3900 + 1}]: {e}")
 
 # 从环境变量解析多个账号
 accounts_env = os.environ.get("SITE_ACCOUNTS", "")
