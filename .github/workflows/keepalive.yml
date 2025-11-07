@@ -2,7 +2,7 @@ name: Keep Alive Login
 
 on:
   schedule:
-    - cron: "20 5 7,27 * *"  # 每月 1 号和 31 号凌晨0点
+    - cron: "20 5 8,27 * *"  # 每月 1 号和 31 号凌晨0点
   workflow_dispatch:       # 支持手动触发
 
 jobs:
