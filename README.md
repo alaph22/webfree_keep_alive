@@ -2,16 +2,10 @@
 
 ## 项目简介
 
-本项目用于自动登录 [Netlib.re](https://www.netlib.re/) 网站，实现账号保活。适用于需要每隔一段时间（如 30 天）登录一次的网站场景。支持多账号循环登录、登录失败判定、延迟和网页加载等待，防止被风控。支持 GitHub Actions 自动运行（无头模式），成功登录后停留 5 秒，用于保活或刷新 Cookie。仅用于登录保活，不涉及敏感操作。
+本项目用于自动登录(https://client.webhostmost.com/login)) 网站，实现账号保活。适用于需要每隔一段时间（如 30 天）登录一次的网站场景。支持多账号循环登录、登录失败判定、延迟和网页加载等待，防止被风控。支持 GitHub Actions 自动运行（无头模式），成功登录后停留 5 秒，用于保活或刷新 Cookie。仅用于登录保活，不涉及敏感操作。
 
   
-   **⚠️随着Fork数量增加，为了避免风控，强烈建议Fork后
-   自行修改`.github/workflows/keepalive.yml`的第五行`- cron: "0 0 1,31 * *"`，其中的1和31，修改为`1-31`任意两个数字**
-
-   
-   * 写多账号表示支持多账号，不代表不支持单个账号，问的我一脸懵，单账号也能用!
-
-## 功能说明
+  ## 功能说明
 
 1. **多账号支持**：通过单个环境变量配置多个账号，保证安全。可在 GitHub Actions 中循环登录。
 2. **登录成功判断**：
@@ -98,16 +92,6 @@ pip install playwright
 python -m playwright install chromium
 ```
 
-6. **本地运行**
-
-```bash
-# Linux/macOS
-eport SITE_ACCOUNTS="user1,password1;user2,password2"
-# Windows PowerShell
-set SITE_ACCOUNTS=user1,password1;user2,password2
-python login.py
-```
-
 * 脚本会自动循环登录每个账号
 * 每个账号操作步骤间隔 2 秒
 * 打开网页后等待 5 秒
@@ -140,7 +124,7 @@ python login.py
 ## 项目结构
 
 ```
-netlib-keepalive/
+webhost_keep_alive/
 ├─ login.py               # 多账号登录脚本
 ├─ .github/
 │  └─ workflows/
