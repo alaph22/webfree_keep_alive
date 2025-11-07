@@ -68,8 +68,8 @@ def login_account(playwright, USER, PWD):
 
         page.goto("https://client.webhostmost.com/login")
         time.sleep(5)
-
-        page.get_by_text("Login").click()
+        page.get_by_role("button", name="Login").click()
+        #page.get_by_text("Login").click()
         time.sleep(2)
         page.get_by_role("textbox", name="Username").fill(USER)
         time.sleep(2)
