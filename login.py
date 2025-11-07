@@ -66,7 +66,7 @@ def login_account(playwright, USER, PWD):
         context = browser.new_context()
         page = context.new_page()
 
-        page.goto("https://www.netlib.re/")
+        page.goto("https://client.webhostmost.com/login")
         time.sleep(5)
 
         page.get_by_text("Login").click()
@@ -74,8 +74,6 @@ def login_account(playwright, USER, PWD):
         page.get_by_role("textbox", name="Username").fill(USER)
         time.sleep(2)
         page.get_by_role("textbox", name="Password").fill(PWD)
-        time.sleep(2)
-        page.get_by_role("button", name="Validate").click()
         page.wait_for_load_state("networkidle")
         time.sleep(2)
 
