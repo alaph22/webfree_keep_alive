@@ -1,4 +1,4 @@
-# Netlib.re 单/多账号登录保活脚本
+# webhostmost 账号登录保活脚本
 
 ## 项目简介
 
@@ -92,8 +92,7 @@ pip install playwright
 python -m playwright install chromium
 ```
 
-* 脚本会自动循环登录每个账号
-* 每个账号操作步骤间隔 2 秒
+* 脚本会自动循环登录账号
 * 打开网页后等待 5 秒
 * 登录成功后停留 5 秒
 * 终端打印每个账号登录结果 ✅ 或 ❌
