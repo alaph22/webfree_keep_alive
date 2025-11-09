@@ -105,7 +105,7 @@ def login_account(playwright, USER, PWD):
         success_signs = [
             "exclusive owner of the following domains",
             "My Services",
-          #  "Client Area",
+            "Client Area",
             "Dashboard"
         ]
         if any(page.query_selector(f"text={sign}") for sign in success_signs):
