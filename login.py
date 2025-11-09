@@ -74,7 +74,12 @@ def login_account(playwright, USER, PWD, max_retries: int = 2):
             )
             # === 修改完毕 ===
             
-            context = browser.new_context()
+            # --- 新增：添加 User-Agent ---
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
+            )
+            # --- 新增完毕 ---
+            
             page = context.new_page()
 
             target_login_url = "https://web.freecloud.ltd/index.php?rp=/login"
@@ -88,7 +93,7 @@ def login_account(playwright, USER, PWD, max_retries: int = 2):
             # ==== 特殊逻辑：检测 Cloudflare 验证并等待通过 ====
             # ... (后续逻辑保持不变)
             start = time.time()
-            max_wait = 120  # 最多等待 120s
+            max_wait = 180  # <-- 修改：延长到 180s
             saw_cf = False
             login_page_reached = False
 
@@ -125,6 +130,20 @@ def login_account(playwright, USER, PWD, max_retries: int = 2):
                     saw_cf = True
                     log(f"⚠️ 检测到 Cloudflare 验证页面，等待其自动通过（最多等待 {max_wait}s）...")
                 
+                # --- 新增：尝试点击 Cloudflare Turnstile (如果找到) ---
+                if saw_cf: # 仅在检测到 CF 页面后尝试
+                    try:
+                        turnstile_iframe = page.query_selector("iframe[src*='turnstile']")
+                        if turnstile_iframe:
+                            log("ℹ️ 检测到 Turnstile (CF 验证)，尝试点击 iframe...")
+                            # 点击 iframe 本身，希望能触发验证
+                            turnstile_iframe.click(timeout=2000)
+                            log("ℹ️ 已尝试点击 Turnstile iframe")
+                    except Exception as e:
+                        # 打印一个信息，而不是报错
+                        log(f"ℹ️ 自动点击 Turnstile 失败: {e}")
+                # --- 新增完毕 ---
+
                 time.sleep(3) # 轮询间隔
 
             if saw_cf and login_page_reached:
