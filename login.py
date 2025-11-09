@@ -103,7 +103,6 @@ def login_account(playwright, USER, PWD):
         time.sleep(1)
 
         # === Step 3: 提交表单 ===
-        # 按钮名兼容多种英文写法
         button_labels = ["Login", "Sign in", "Validate", "Submit", "Email"]
         clicked = False
         for label in button_labels:
@@ -116,8 +115,7 @@ def login_account(playwright, USER, PWD):
                 continue
 
         if not clicked:
-            # 没有找到按钮则尝试直接提交表单或用 Enter 触发
-            log("⚠️ 未找到登录按钮，改用 form 提交或回车键提交")
+            log("⚠️ 未找到登录按钮，尝试回车提交（可能页面会自动响应）")
             try:
                 page.evaluate("document.querySelector('form').submit()")
             except:
@@ -126,37 +124,43 @@ def login_account(playwright, USER, PWD):
                 except:
                     log("⚠️ 回车提交失败，可能页面结构特殊")
 
-        # === Step 4: 等待页面加载与判断结果 ===
+        # === Step 4: 等待跳转或加载 ===
         page.wait_for_load_state("networkidle")
         time.sleep(5)
 
-        # 登录成功标识
+        # === Step 5: 智能结果判断（防止前后矛盾日志） ===
         success_signs = [
             "exclusive owner of the following domains",
             "My Services",
             "Client Area",
             "Dashboard"
         ]
-        if any(page.query_selector(f"text={sign}") for sign in success_signs):
-            log(f"✅ 账号 {USER} 登录成功")
+        success_detected = any(page.query_selector(f"text={sign}") for sign in success_signs)
+
+        fail_msgs = [
+            "Invalid login details",
+            "Incorrect username or password",
+            "Login failed",
+            "Your credentials are incorrect"
+        ]
+        failed_msg = next(
+            (msg for msg in fail_msgs if page.query_selector(f"text={msg}")),
+            None
+        )
+
+        if success_detected:
+            log(f"✅ 账号 {USER} 登录成功（页面检测通过）")
+        elif failed_msg:
+            log(f"❌ 账号 {USER} 登录失败: {failed_msg}")
         else:
-            # 登录失败标识
-            fail_msgs = [
-                "Invalid login details",
-                "Incorrect username or password",
-                "Login failed",
-                "Your credentials are incorrect"
-            ]
-            failed_msg = next(
-                (msg for msg in fail_msgs if page.query_selector(f"text={msg}")),
-                None
-            )
-            if failed_msg:
-                log(f"❌ 账号 {USER} 登录失败: {failed_msg}")
+            # 如果前面报了“⚠️ 未找到按钮”等，但仍然检测到跳转，可修正日志提示
+            current_url = page.url
+            if "/dashboard" in current_url or "/clientarea" in current_url:
+                log(f"✅ 账号 {USER} 登录成功（自动跳转检测）")
             else:
                 log(f"❌ 账号 {USER} 登录失败: 未检测到成功标识")
 
-        # === Step 5: 清理资源 ===
+        # === Step 6: 清理资源 ===
         context.close()
         browser.close()
 
