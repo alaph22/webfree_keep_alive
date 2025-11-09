@@ -1,7 +1,7 @@
 import time
 import re
 from datetime import datetime
-from playwright.sync_api import sync_playwright, Page, Browser, Context
+from playwright.sync_api import sync_playwright, Page, Browser, BrowserContext
 
 # 你的代码依赖一个 log 函数，这里补充一个简单的实现
 def log(message: str):
@@ -22,7 +22,7 @@ def login_account(playwright, USER, PWD, max_retries: int = 2):
         attempt += 1
         log(f"🚀 开始登录账号: {USER} (尝试 {attempt}/{max_retries + 1})")
         browser: Browser | None = None
-        context: Context | None = None
+        context: BrowserContext | None = None
         page: Page | None = None
         try:
             # === 关键修改点 ===
