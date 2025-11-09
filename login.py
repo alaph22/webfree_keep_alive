@@ -93,7 +93,7 @@ def login_account(playwright, USER, PWD, max_retries: int = 2):
             # ==== 特殊逻辑：检测 Cloudflare 验证并等待通过 ====
             # ... (后续逻辑保持不变)
             start = time.time()
-            max_wait = 180  # <-- 修改：延长到 180s
+            max_wait = 240  # <-- 修改：延长到 240s
             saw_cf = False
             login_page_reached = False
 
