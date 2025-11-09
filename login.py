@@ -72,36 +72,65 @@ def login_account(playwright, USER, PWD):
         page.wait_for_load_state("networkidle")
         time.sleep(2)
 
-        # 等待邮箱和密码输入框加载
-        page.wait_for_selector("#inputEmail", timeout=30000)
-        page.wait_for_selector("#inputPassword", timeout=30000)
+        # === Step 1: 寻找用户名/邮箱输入框 ===
+        input_filled = False
+        for selector in ["#inputEmail", "#inputUsername", "input[name='username']", "input[name='email']"]:
+            try:
+                page.wait_for_selector(selector, timeout=5000)
+                page.fill(selector, USER)
+                log(f"📝 使用字段 {selector} 填入用户名/邮箱")
+                input_filled = True
+                break
+            except:
+                continue
 
-        # 填入登录凭据
-        page.fill("#inputEmail", USER)
-        page.fill("#inputPassword", PWD)
+        if not input_filled:
+            log("❌ 未找到可用的用户名/邮箱输入框，终止登录")
+            context.close()
+            browser.close()
+            return
+
+        # === Step 2: 填写密码 ===
+        try:
+            page.wait_for_selector("#inputPassword", timeout=10000)
+            page.fill("#inputPassword", PWD)
+        except:
+            log("❌ 未找到密码输入框，终止登录")
+            context.close()
+            browser.close()
+            return
+
         time.sleep(1)
 
-        # 提交登录表单
-        # 按钮可能是 "Login"、"Sign in"、"Validate" 等
-        try:
-            page.get_by_role("button", name="Login").click(timeout=5000)
-        except:
-            # 兜底：用常见按钮名尝试
-            for label in ["Sign in", "Validate", "Submit"]:
-                try:
-                    page.get_by_role("button", name=label).click(timeout=3000)
-                    break
-                except:
-                    continue
-            else:
-                log("⚠️ 未找到登录按钮，改用 form 提交")
-                page.press("#inputPassword", "Enter")
+        # === Step 3: 提交表单 ===
+        # 按钮名兼容多种英文写法
+        button_labels = ["Login", "Sign in", "Validate", "Submit", "Email"]
+        clicked = False
+        for label in button_labels:
+            try:
+                page.get_by_role("button", name=label).click(timeout=3000)
+                log(f"🔘 点击按钮 '{label}' 尝试登录")
+                clicked = True
+                break
+            except:
+                continue
 
-        # 等待跳转或加载
+        if not clicked:
+            # 没有找到按钮则尝试直接提交表单或用 Enter 触发
+            log("⚠️ 未找到登录按钮，改用 form 提交或回车键提交")
+            try:
+                page.evaluate("document.querySelector('form').submit()")
+            except:
+                try:
+                    page.press("#inputPassword", "Enter")
+                except:
+                    log("⚠️ 回车提交失败，可能页面结构特殊")
+
+        # === Step 4: 等待页面加载与判断结果 ===
         page.wait_for_load_state("networkidle")
         time.sleep(5)
 
-        # 登录成功验证（常见几种情况）
+        # 登录成功标识
         success_signs = [
             "exclusive owner of the following domains",
             "My Services",
@@ -111,7 +140,7 @@ def login_account(playwright, USER, PWD):
         if any(page.query_selector(f"text={sign}") for sign in success_signs):
             log(f"✅ 账号 {USER} 登录成功")
         else:
-            # 检测错误信息
+            # 登录失败标识
             fail_msgs = [
                 "Invalid login details",
                 "Incorrect username or password",
@@ -127,7 +156,7 @@ def login_account(playwright, USER, PWD):
             else:
                 log(f"❌ 账号 {USER} 登录失败: 未检测到成功标识")
 
-        # 清理
+        # === Step 5: 清理资源 ===
         context.close()
         browser.close()
 
